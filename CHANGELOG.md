@@ -9,6 +9,15 @@ improvised at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 0.1.2 - lechium/tvOSSettingsViewAuto joins the references, as a menu pattern rather than widgets
+
+The owner sent it as the project that managed to put widgets on the screen. Read
+closely — the README, the code and its screenshot — it is a 2016 tvOS settings
+screen: a list on the right and a preview on the left that follows the focus.
+Its *Weather* row shows a static icon and sample metadata; nothing on it is live.
+The page now says so, and points at Free My TV's drawer as the reference that
+does show live weather and prices on an LG TV.
+
 ## 0.1.1 - the references studied so far, and what each one can give an LG app
 
 The owner sent the Instagram reel that started this, and three repositories:
