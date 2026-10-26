@@ -25,6 +25,17 @@ remote, on firmware 03.53.45 as LG's support page lists it. `CLAUDE.md` and
 TVs now asks only for the other ones, and the route row records Developer Mode
 as the proposal waiting on the owner.
 
+## 0.1.5 - ADR-001: root the first target, build on cleanyourtv-WebOS
+
+The owner picked a side of the choice 0.1.4 reopened, and accepted the risk
+for this specific TV in his own words. ADR-001 records the decision, its
+context and its consequences — most notably that LG's Home is replaced
+outright rather than reached alongside it, which turns "our own layout" into a
+customization of cleanyourtv-WebOS once it's installed, not a separate app.
+The queue's route row is produced and removed; a new row tracks getting the
+physical TV rooted and running it, which is the owner's act, against his own
+README references, not this repository's to script or walk through.
+
 ## 0.1.4 - correction: root is open on the first target's firmware, not closed
 
 0.1.3 concluded root was "very likely closed" on firmware 03.53.45, inferred
