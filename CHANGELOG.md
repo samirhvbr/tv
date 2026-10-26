@@ -9,6 +9,18 @@ improvised at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 0.1.3 - the references say how each fact was checked, and bring in LG's own documentation
+
+A second review of the page asked for it, rightly: a claim copied from a README
+and a claim we read in the code were written the same way. Every row now carries
+its evidence — *documented*, *code read*, or *tested*, and nothing is tested yet.
+The page gains LG's own statements that bound the project — Chromium 79 on
+webOS 6, five-way navigation required of every app, Developer Mode uninstalling
+its apps when it is disabled, no API to start an app at power-on — and
+lasharor/cleanyourtv-WebOS, the launcher that replaces LG's Home but needs a
+rooted TV. On the first target that root is very likely closed: firmware
+03.53.45 is newer than every build the published exploits are known to reach.
+
 ## 0.1.2 - lechium/tvOSSettingsViewAuto joins the references, as a menu pattern rather than widgets
 
 The owner sent it as the project that managed to put widgets on the screen. Read
