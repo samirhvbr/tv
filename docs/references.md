@@ -23,7 +23,8 @@ attribution in [`../NOTICE`](../NOTICE) in the commit that brings it.
 | Instagram reel by `@travaoscroll` | The trigger. Claims one Claude Code prompt strips every ad from a smart TV, no root, open source, "17k stars in 4 days", 70+ models including LG and Samsung. Instagram marks the profile as AI-generated, and the caption sells a "system" by DM | — | — | Nothing to build on. Its numbers mix CleanYourTV and Free My TV | documented (the caption) |
 | [Gathin23/cleanyourtv](https://github.com/Gathin23/cleanyourtv) | Debloats Android TV and Google TV over Wi-Fi ADB and installs an Apple TV-style launcher. Created 17/10/2026, ~38.7k stars. Python | **No** — webOS has no ADB | Not recognized by GitHub | The shape of the idea (an agent drives the install; everything reversible), not the mechanism | documented |
 | [simbasjungles/free-my-tv](https://github.com/simbasjungles/free-my-tv) | An ad-free home screen for Google TV, LG webOS and Samsung Tizen. Created 19/10/2026, ~4.8k stars | **Yes**, webOS 3 or newer, through Developer Mode | MIT | **The closest thing to this project**, and the integration to study: listing apps, launching them, inputs, persistence, the shelf editor. Details below | documented; `web/tv.js` code read |
-| [lasharor/cleanyourtv-WebOS](https://github.com/lasharor/cleanyourtv-WebOS) | A launcher that **replaces** LG's Home, plus an optional debloat of LG's ads and telemetry. Takes over Home with a RAM-only mount, so a reboot without its boot scripts brings LG's Home back. Created 21/10/2026, ~240 stars; its author tested one OLED on webOS 25 | Only **rooted** TVs with the Homebrew Channel, webOS 5 or newer | Not recognized by GitHub | The route to study **if replacing LG's Home ever becomes a must**. On the first target it is very likely closed — see [root](#root-on-the-first-target) | documented |
+| [lasharor/cleanyourtv-WebOS](https://github.com/lasharor/cleanyourtv-WebOS) | A launcher that **replaces** LG's Home, plus an optional debloat of LG's ads and telemetry. Takes over Home with a RAM-only mount, so a reboot without its boot scripts brings LG's Home back. Created 21/10/2026, ~240 stars; its author tested one OLED on webOS 25 | Only **rooted** TVs with the Homebrew Channel, webOS 5 or newer | Not recognized by GitHub | The route to study if replacing LG's Home becomes the direction — root is open on the first target after all, see [below](#root-on-the-first-target) | documented |
+| [throwaway96/slopbro](https://github.com/throwaway96/slopbro) | A public PoC that roots a webOS TV by exploiting a vulnerability in its `jsserver` component, then installs the Homebrew Channel for persistence. Reported to work on webOS 4–11. Created 08/06/2026, ~520 stars | Yes — and **it reaches the first target's exact firmware**, see below | AGPL-3.0-or-later | The route to root, if the owner decides that is the direction | documented |
 | [marcreichel/apple-tv](https://github.com/marcreichel/apple-tv) | A proof of concept of the Apple TV (tvOS) home screen in plain HTML, CSS and JavaScript: tiles with the tvOS parallax tilt, a dock row, drag and drop. 2021, last push 05/2023, 7 files, [live demo](https://marcreichel.github.io/apple-tv/). **The owner's favourite look** | The technology does — a webOS app *is* a web page | MIT, as is its tilt component [apple-tv-card](https://github.com/marcreichel/apple-tv-card) (maintained, 06/2026) | The look, and only the look. What it lacks on a TV is listed below | code read |
 | [kwameaj67/AppleTV](https://github.com/kwameaj67/AppleTV) | An iPhone clone (Swift, UIKit compositional layout) of the Apple TV app's *Store* tab: a hero carousel, a ranked chart, shelves of cards. 2022 | No — iOS | None | The section structure of a content screen, as an idea | code listing and screenshots read |
 | [lechium/tvOSSettingsViewAuto](https://github.com/lechium/tvOSSettingsViewAuto) | A tvOS app (Objective-C, 2016, by Kevin Bradley, the author of nitoTV) recreating the pre-tvOS Apple TV menu: a settings-style list on the right and, on the left, a large preview — image, description, metadata — that follows the focus; selecting a row cycles its value. The *Weather*, *RSS* and *YouTube* entries are sample rows with a static icon, **not live widgets** | No — tvOS | MIT | The list-plus-preview pattern, for a settings or app-detail screen | code and screenshot read |
@@ -41,14 +42,31 @@ attribution in [`../NOTICE`](../NOTICE) in the commit that brings it.
 
 ## Root on the first target
 
-The first target runs firmware **03.53.45**. LG fixed the root vulnerabilities
-Bitdefender reported (CVE-2023-6317 to 6320) in updates from March 2024, whose
-affected list on webOS 6 ends at 03.36.50; and the author of
-[faultmanager-autoroot](https://github.com/throwaway96/faultmanager-autoroot)
-reports the latest firmware of essentially every webOS 5, 6, 7 and 9 model as
-patched since August 2025. **Root on this TV is therefore very likely closed** —
-not verified for this exact build, which [CanI.RootMy.TV](https://cani.rootmy.tv)
-answers. Evidence: documented.
+**Correction, same day:** the paragraph below, in 0.1.3, concluded root was
+"very likely closed" on firmware 03.53.45 from the *faultmanager* and
+*DejaVuln* patch histories alone, without checking the tool that actually
+tracks this. The owner checked [CanI.RootMy.TV](https://cani.rootmy.tv) and it
+is wrong: **03.53.45 is itself the latest version a current tool can root.**
+The lesson, not just the fact: when a checker for the exact question exists,
+use it first — don't infer the answer from adjacent patch notes.
+
+Four older exploits (`faultmanager`, `DejaVuln`, `ASM`, `crashd`) are patched,
+each below 03.41.00. [**SlopBro**](https://github.com/throwaway96/slopbro) is
+not: CanI.RootMy.TV lists `03.53.45` as its latest known rootable version for
+this exact model (`UP7500PSF.AWZ`, webOS 6.x). SlopBro is a public PoC
+(AGPL-3.0, ~520 stars, last pushed 28/09/2026) for a webOS vulnerability,
+reported to work on webOS 4–11; it pairs with the TV over its own
+remote-control service and, once run, installs the
+[webOS Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel)
+for persistence. Evidence: documented (CanI.RootMy.TV, checked by the owner;
+SlopBro's own README, read in full).
+
+**What this changes:** the route decision in [the queue](../.continue/README.md)
+reopens as a real two-way choice, not a proposal with root foreclosed. It
+carries real costs the Developer Mode route does not — using a third-party
+exploit against your own TV, and keeping the firmware frozen below whatever
+version patches it, which means no further LG OTA updates once rooted. That
+tradeoff is the owner's to weigh, not this document's to resolve.
 
 ## Free My TV on LG — how the route works
 

@@ -25,6 +25,17 @@ remote, on firmware 03.53.45 as LG's support page lists it. `CLAUDE.md` and
 TVs now asks only for the other ones, and the route row records Developer Mode
 as the proposal waiting on the owner.
 
+## 0.1.4 - correction: root is open on the first target's firmware, not closed
+
+0.1.3 concluded root was "very likely closed" on firmware 03.53.45, inferred
+from two exploits' patch histories without checking a tool built for exactly
+this question. The owner checked CanI.RootMy.TV: 03.53.45 is itself SlopBro's
+latest known rootable version for this model. `docs/references.md` now says so,
+with the correction left visible rather than silently fixed, and adds SlopBro
+to the table. The route decision in the queue reopens as a genuine two-way
+choice — Developer Mode or root — instead of one with root foreclosed; nothing
+was installed or run against the TV.
+
 ## 0.1.3 - the references say how each fact was checked, and bring in LG's own documentation
 
 A second review of the page asked for it, rightly: a claim copied from a README

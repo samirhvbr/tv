@@ -40,7 +40,7 @@ here would be a second source of truth.
 | Item | State | Who unblocks it |
 |---|---|---|
 | The other TVs — model and webOS version of each of the owner's other TVs, for after the first target works | Open | Owner |
-| The route on LG — an app installed through Developer Mode, or a rooted TV with the community homebrew tooling. Decided as an ADR, and the stack follows from it. Free My TV shows the Developer Mode route working, and root is very likely closed on the first target's firmware ([references](../docs/references.md)) | Proposed: Developer Mode. Waiting on the owner | Owner |
+| The route on LG — Developer Mode (reversible, no root, apps removed when it's disabled, ~40-day sessions) or root with SlopBro + Homebrew Channel (persistent, no expiry, but runs a third-party exploit against the TV and freezes it below the patching firmware). Both are genuinely open on the first target's firmware ([references](../docs/references.md)); decided as an ADR once the owner picks | Open — a real choice now, not a foreclosed one | Owner |
 | What "layout" covers — the home screen and launcher, the system menus, or both. The favourite look so far is the Apple TV home screen of marcreichel/apple-tv ([references](../docs/references.md)) | Open | Owner |
 
 ## 2. Where things went
