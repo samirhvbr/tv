@@ -9,6 +9,15 @@ improvised at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 0.1.3 - the first target TV is the owner's 43UP7500PSF
+
+The owner named the TV everything is built and measured against first: an LG
+43UP7500PSF, a 2021 model on webOS 6.x with Chromium 79 and a conventional
+remote, on firmware 03.53.45 as LG's support page lists it. `CLAUDE.md` and
+`AGENTS.md` carry it where an agent reads first; the queue's row about target
+TVs now asks only for the other ones, and the route row records Developer Mode
+as the proposal waiting on the owner.
+
 ## 0.1.3 - the references say how each fact was checked, and bring in LG's own documentation
 
 A second review of the page asked for it, rightly: a claim copied from a README

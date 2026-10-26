@@ -39,8 +39,8 @@ here would be a second source of truth.
 
 | Item | State | Who unblocks it |
 |---|---|---|
-| The target TVs — model and webOS version of each one this must run on; the route depends on the version | Open | Owner |
-| The route on LG — an app installed through Developer Mode, or a rooted TV with the community homebrew tooling. Decided as an ADR, and the stack follows from it. Free My TV shows the Developer Mode route working ([references](../docs/references.md)) | Open — needs the row above | Owner, on a proposal |
+| The other TVs — model and webOS version of each of the owner's other TVs, for after the first target works | Open | Owner |
+| The route on LG — an app installed through Developer Mode, or a rooted TV with the community homebrew tooling. Decided as an ADR, and the stack follows from it. Free My TV shows the Developer Mode route working, and root is very likely closed on the first target's firmware ([references](../docs/references.md)) | Proposed: Developer Mode. Waiting on the owner | Owner |
 | What "layout" covers — the home screen and launcher, the system menus, or both. The favourite look so far is the Apple TV home screen of marcreichel/apple-tv ([references](../docs/references.md)) | Open | Owner |
 
 ## 2. Where things went

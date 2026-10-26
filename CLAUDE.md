@@ -62,10 +62,15 @@ hatch declared in both, named by `HOOK_ESCAPE_VAR` at the top of each hook:
 
 **tv** — Our own home-screen layout and operating-system customization for smart TVs, starting with LG (webOS).
 
-**Phase: design — there is no code.** The first target is LG; the route (an app
-installed through Developer Mode, or a rooted TV with the community homebrew
-tooling) and the TV models it must run on are still open, in the queue —
-[.continue/README.md](.continue/README.md).
+**Phase: design — there is no code.** The route (an app installed through
+Developer Mode, or a rooted TV with the community homebrew tooling) is still
+open, in the queue — [.continue/README.md](.continue/README.md).
+
+**First target TV: the owner's LG 43UP7500PSF** — a 2021 model on webOS 6.x,
+whose web engine is Chromium 79, with a conventional remote, on firmware
+03.53.45. Everything is built and measured against it first; the owner's other
+TVs come after it works. What that platform allows and refuses is in
+[docs/references.md](docs/references.md).
 
 - **Stack:** not chosen. It follows from the route, and is recorded as an ADR in
   [docs/decisions.md](docs/decisions.md) when it is.
