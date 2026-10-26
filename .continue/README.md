@@ -39,10 +39,9 @@ here would be a second source of truth.
 
 | Item | State | Who unblocks it |
 |---|---|---|
-| The references — the posts and comments showing people already changing the layout and the OS of LG TVs, which this project means to do its own way | Not collected | Owner — links |
 | The target TVs — model and webOS version of each one this must run on; the route depends on the version | Open | Owner |
-| The route on LG — an app installed through Developer Mode, or a rooted TV with the community homebrew tooling. Decided as an ADR, and the stack follows from it | Open — needs the two rows above | Owner, on a proposal |
-| What "layout" covers — the home screen and launcher, the system menus, or both | Open | Owner |
+| The route on LG — an app installed through Developer Mode, or a rooted TV with the community homebrew tooling. Decided as an ADR, and the stack follows from it. Free My TV shows the Developer Mode route working ([references](../docs/references.md)) | Open — needs the row above | Owner, on a proposal |
+| What "layout" covers — the home screen and launcher, the system menus, or both. The favourite look so far is the Apple TV home screen of marcreichel/apple-tv ([references](../docs/references.md)) | Open | Owner |
 
 ## 2. Where things went
 

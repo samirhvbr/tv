@@ -16,6 +16,7 @@ that lists everything stops being read.
 | [decisions.md](decisions.md) | **ADRs** — the chronological record of what was decided here and why, so it is not re-litigated. |
 | [security.md](security.md) | The normative security document. In a conflict with any other document, it wins. |
 | [runbook.md](runbook.md) | From a clean machine to a running environment; deploy; the pre-flight checklist before making the repository public. |
+| [references.md](references.md) | **What has been looked at** — the projects that already change LG and other TVs, and the Apple TV-style layouts: what each is, whether it runs on LG, its license, and what it can give this project. |
 | [repodocs.md](repodocs.md) | **What in this repository came from the fleet standard, and where each piece lives.** The map of the relationship: what travels out of repodocs by copy, what by stamp, and what is only ever linked; the manifest of files and what is lost when one is missing; how to bring an existing repository in; how a fleet rule reaches this one. |
 
 <!-- Add the project's own pages as they are written. The recurring ones across

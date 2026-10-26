@@ -9,6 +9,20 @@ improvised at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 0.1.1 - the references studied so far, and what each one can give an LG app
+
+The owner sent the Instagram reel that started this, and three repositories:
+two Apple TV-style layouts and an Android TV navigation bar. Following the reel
+led to the two projects it was talking about. `docs/references.md` records what
+each one is, whether it can run on an LG TV, its license, and what this project
+can take from it — with the two that matter most worked out: Free My TV, which
+already ships an ad-free home screen to LG through Developer Mode without root,
+and marcreichel/apple-tv, the owner's favourite look, which is plain HTML, CSS
+and JavaScript and therefore the same technology a webOS app is made of.
+
+The references row leaves the queue because the thing exists now; the route and
+the layout rows point at the page. Nothing was installed or run against a TV.
+
 ## 0.1.0 - initial documentation structure
 
 First commit of tv: our own home-screen layout and operating-system customization for smart TVs, starting with LG (webOS). The repository holds
