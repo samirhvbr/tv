@@ -44,15 +44,10 @@ disagreeing about one number is how a wrong deploy gets signed off.
 Bump `version.md` **in the same commit as the change it describes.** Never in a
 commit of its own.
 
-<!-- The three slots and the discipline are the fleet convention. WHAT COUNTS AS
-     A Z IS PER-PROJECT — replace the examples with this project's real
-     triggers, concretely enough that two people would classify the same change
-     the same way. -->
-
 | Part | When it moves | Who moves it |
 |---|---|---|
-| **Z** | _e.g. a new screen, a new database table, a layout change, a renamed button, a wording fix_ | Every change. The normal case. |
-| **Y** | _e.g. a new main service, an API redesign, a compatibility break, a completed phase_ | When it lands |
+| **Z** | A document, a queue item, a change to a screen or a layout, a fix | Every change. The normal case. |
+| **Y** | A new TV platform (another brand, or a webOS generation that needs its own route), a change of route, a compatibility break | When it lands |
 | **X** | Reserved — a stable release | Manual, owner's call |
 
 ## Who commits, and when

@@ -9,6 +9,13 @@ improvised at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 0.1.3 - versioning.md's bump criteria are this project's, as CLAUDE.md already had them
+
+0.1.0 replaced the skeleton's generic Z and Y examples in `CLAUDE.md` and
+`AGENTS.md` but left them in `docs/versioning.md`, so two documents answered the
+same question differently. The second review caught it. The table now says what
+the twins say.
+
 ## 0.1.3 - the first target TV is the owner's 43UP7500PSF
 
 The owner named the TV everything is built and measured against first: an LG
