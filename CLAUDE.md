@@ -74,6 +74,10 @@ whose web engine is Chromium 79, with a conventional remote, on firmware
 TVs come after it works. What that platform allows and refuses is in
 [docs/references.md](docs/references.md).
 
+- **Catalog:** Native Plex TV hierarchy and local grouping of Other Videos by
+  existing folders under ADR-004. Keep original numeric video ratingKeys for
+  playback and watch state; virtual `fs_` parent IDs never reach Plex metadata
+  or timeline routes. Never rename files or mutate library configuration.
 - **Stack:** Node.js 22.9+ built-ins in `server/`, browser ES modules and CSS in
   `public/`; no installed runtime npm dependencies. Playwright and the vendored
   hls.js build are pinned; third-party attribution lives in `NOTICE`.

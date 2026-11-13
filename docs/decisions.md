@@ -81,8 +81,10 @@ compatibility with the owner's server or televisions.
 
 **Consequences.** Browser UI, adapter integration and playback can be tested
 before a device is modified. Real server acceptance still requires the
-owner's endpoint and user token. Bad Plex matches or an Other Videos library
-need correction rather than guessed grouping that could corrupt watch state.
+owner's endpoint and user token. Initially, grouping required Plex TV metadata;
+ADR-004 extends this to a local folder hierarchy for Other Videos without
+changing the identity used for watch state. Bad Plex matches remain a server
+catalog concern.
 Codec, audio, subtitle and transcode behavior need validation on actual media;
 this prototype does not claim full Plex player parity. ADR-001 continues to
 record the separate physical-TV choice.
@@ -112,3 +114,35 @@ the checkout unless deliberately reviewed for publication.
 
 **Consequences.** `npm ci` reconstructs development dependencies. Generated reports stay local or in CI artifacts rather than entering git. Runtime operation has
 no third-party npm dependency and does not need `node_modules/`.
+
+## ADR-004 — Group Other Videos locally while retaining original Plex identity
+
+**Status:** `ACCEPTED` · 13/11/2026
+
+**Context.** Connecting the owner's server succeeded, but no TV libraries were
+available to the prototype. The owner organizes series in folders inside Other
+Videos libraries and explicitly requested support for that existing structure,
+with no server file changes. Correcting the library type under the original
+ADR-002 would not meet that request.
+
+**Decision.** Read Other Videos metadata and file paths through the configured
+Plex server, infer local series/season parents from folder and episode markers,
+and issue stable opaque `fs_` identifiers for those parents. Keep original video
+ratingKeys for playback, timeline reporting, watched state and artwork. The
+gateway reads no filesystem directly and sends no file, metadata, library-setting
+or scan mutation to Plex. Paths are retained only inside the gateway and are
+not returned to the browser or published as acceptance evidence.
+
+Recognize Other Videos by its Plex type and personal-media agent rather than
+the display name. Preserve native TV libraries and exclude ordinary movie
+libraries from this series view. Ambiguous folder layouts use separate local
+groups rather than combining media by an approximate title alone. Paginate and
+bound the catalog, cache structure briefly, and reread playback state from Plex.
+
+**Consequences.** The prototype can present series and seasons without a Plex
+library migration or file rename. It does not create Plex series metadata, move
+history between objects, or promise perfect identification for arbitrary folder
+names. Renaming folders can change virtual parent identifiers; video history
+still belongs to its original Plex ratingKey. Native film browsing is separate
+work. Real catalog, resume, codecs and cross-client acceptance remain separate
+from synthetic fixture checks.

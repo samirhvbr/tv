@@ -10,6 +10,7 @@ import { DemoAdapter } from './demo.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.mp4': 'video/mp4', '.woff2': 'font/woff2', '.ico': 'image/x-icon' };
+const validCatalogId = value => validId(value) || /^fs_[a-f0-9]{32}$/.test(value);
 
 async function jsonBody(req) {
   if (!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type'] || '')) throw new AppError(415, 'Envie os dados no formato JSON.');
@@ -147,7 +148,7 @@ export async function createApp(options = {}) {
       const hierarchy = path.match(/^\/api\/(libraries|shows|seasons)\/([^/]+)\/(shows|seasons|episodes)$/);
       if (req.method === 'GET' && hierarchy) {
         const [, group, id, action] = hierarchy;
-        if (!validId(id) || !{ libraries: 'shows', shows: 'seasons', seasons: 'episodes' }[group] || { libraries: 'shows', shows: 'seasons', seasons: 'episodes' }[group] !== action) throw new AppError(400, 'Identificador inválido.');
+        if (!(group === 'libraries' ? validId(id) : validCatalogId(id)) || !{ libraries: 'shows', shows: 'seasons', seasons: 'episodes' }[group] || { libraries: 'shows', shows: 'seasons', seasons: 'episodes' }[group] !== action) throw new AppError(400, 'Identificador inválido.');
         json(res, await adapter[action](id)); return;
       }
       const episodeRoute = path.match(/^\/api\/episodes\/([^/]+)(?:\/(progress|watched|playback))?$/);

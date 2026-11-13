@@ -40,11 +40,22 @@ and the explicit parent button work even when a season is opened directly.
 Browser Back/Forward preserve navigation; returning from playback preserves
 the current season rather than opening a fresh library page.
 
-The client uses the show's and episode's Plex identifiers, not a rewritten
-filename, to report playback. It requests TV libraries. A library of type
-Other Videos or an incorrectly matched show needs correction on Plex; the
-client does not silently guess that unrelated video objects are one series.
-The source files and existing folders are not renamed or moved.
+Native TV libraries use the show's and episode's Plex identifiers. Other Videos
+libraries (Plex movie type with the Personal Media agent) receive a local folder
+hierarchy under ADR-004. Series/season parents have opaque `fs_` identifiers;
+every playable item retains its original numeric Plex ratingKey. Timeline and
+watched requests never use a virtual identifier. Ordinary movie libraries are
+not included in this series view.
+
+Folder grouping recognizes existing series/season paths and season/episode
+markers such as `Season 1`, `Temporada 1`, `S01` and `S01E02`, including season
+release folders. Content without a clear match remains in separate groups.
+This is presentation in our client; it does not create metadata on Plex. The
+source files and existing folders are not renamed or moved. File paths are used
+only inside the gateway and are not returned to the browser. Catalog structure
+is cached for 60 seconds; watch state is reread from Plex instead of trusting
+that cache. Acknowledged changes have a maximum 10-second guard against delayed
+Plex persistence, after which the server's read state remains authoritative.
 
 ## Playback state
 
@@ -64,6 +75,7 @@ old tab cannot write progress into a newly connected server. Closing the player
 waits for the final save; finishing a video returns to the same season. Closing
 the entire browser or losing power is best effort: the last periodic/paused
 position is the recovery point if the final network request cannot complete.
+
 
 ## Player scope
 

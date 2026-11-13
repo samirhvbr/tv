@@ -33,6 +33,11 @@ the Plex Media Server, not Plex Web. Tokens are never committed or logged.
 Restarting clears a connection entered in the dialog; startup `.env` values
 are read again. See [browser-prototype.md](browser-prototype.md).
 
+Native TV libraries and Other Videos libraries using the Personal Media agent
+are supported. Other Videos grouping is local to the gateway, uses existing
+folder names, and does not edit files or Plex settings. Ordinary movie libraries
+are not part of this series catalog.
+
 ## 4. Deploy
 
 This version is a local browser prototype. Do not expose its single-user

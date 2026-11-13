@@ -9,6 +9,24 @@ improvised at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 0.1.7 - group Other Videos into series and seasons from existing folders
+
+The owner connected a real Plex server whose series libraries use Other Videos,
+so the original TV-library-only adapter returned no catalog. The gateway now
+builds a local hierarchy from existing folder paths and season/episode markers.
+Virtual parents never become Plex metadata identifiers: playback and watch
+state continue to use each original video ratingKey. No server file is renamed,
+moved or edited, and the gateway does not change Plex library settings or
+metadata. Ambiguous content remains separated rather than silently merged.
+ADR-004 records this explicit change of scope. The 32 Node checks passed,
+including ten folder/catalog cases for release folders, Windows paths, ambiguous
+roots, omitted zero-state fields, pagination, cache expiry, stale responses and
+removed seasons. The 14 Chromium checks passed; after the final state-refresh
+change, the affected Other Videos browser check passed again. Real Plex
+authentication was confirmed on 0.1.6, but folder acceptance and actual-media
+playback on the owner's server await local reconnection after the gateway
+restart. No private address, token, inventory or screenshot is published.
+
 ## 0.1.6 - build the Plex browser library with live playback progress
 
 The Portuguese interface now presents series, seasons and episodes with
