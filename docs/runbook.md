@@ -8,7 +8,9 @@
 
 ## 1. Requirements
 
-Nothing yet — the repository holds documents. The first code fills this in.
+Node.js 22.9+ runs the local gateway. `npm ci --ignore-scripts` installs the
+pinned Playwright development dependency for browser checks. Chromium for the
+checks is installed with `npx playwright install chromium`.
 
 ## 2. From a clean machine to running
 
@@ -16,17 +18,26 @@ Nothing yet — the repository holds documents. The first code fills this in.
 git clone git@github.com:samirhvbr/tv.git
 cd tv
 git config core.hooksPath tools/git-hooks   # once per clone — see §5
+npm start
 ```
 
-Nothing to install or run yet.
+Open `http://127.0.0.1:4317`. The gateway listens only on loopback. With no
+Plex configuration it serves the labeled demo; all catalog acceptance in that
+mode is synthetic. Use `npm test` and `npm run test:browser` for validation.
 
 ## 3. Configuration
 
-None yet.
+Use the local connection dialog or copy `.env.example` to `.env` and set
+`PLEX_SERVER_URL`, `PLEX_TOKEN`, and optionally `PORT`. The server URL refers to
+the Plex Media Server, not Plex Web. Tokens are never committed or logged.
+Restarting clears a connection entered in the dialog; startup `.env` values
+are read again. See [browser-prototype.md](browser-prototype.md).
 
 ## 4. Deploy
 
-None yet. Whatever it becomes, putting anything on a real TV is the owner's act.
+This version is a local browser prototype. Do not expose its single-user
+gateway to a network or the internet. Packaging, installing or changing a real
+TV remains the owner's act under ADR-001 and the security guidelines.
 
 ## 5. The git hooks
 

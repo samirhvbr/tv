@@ -1,6 +1,6 @@
 # `.continue/` — the queue
 
-> **Status:** `ACTIVE` · Last reviewed 26/10/2026, repository at 0.1.0
+> **Status:** `ACTIVE` · Last reviewed 13/11/2026, repository at 0.1.6
 
 Work in progress: drafts, plans under discussion, notes on things still being
 built, briefings for picking the work back up later.
@@ -39,9 +39,10 @@ here would be a second source of truth.
 
 | Item | State | Who unblocks it |
 |---|---|---|
-| The other TVs — model and webOS version of each of the owner's other TVs, for after the first target works | Open | Owner |
-| The first target TV rooted and running cleanyourtv-WebOS — [ADR-001](../docs/decisions.md) decided the route; the owner runs SlopBro, the Homebrew Channel and cleanyourtv-WebOS against the physical TV, each from its own README. Nothing to build here until it's done | Open | Owner |
+| Acceptance on the other TVs — the owner supplied 55NANO80TSA / webOS 25 and 49UM731C0SA / webOS 4; no browser prototype or root path has been tested on either physical unit | Open | Owner, after browser acceptance |
+| The first target TV rooted and running cleanyourtv-WebOS — [ADR-001](../docs/decisions.md) decided the physical route; the owner runs the upstream tools. The browser prototype in ADR-002 proceeds independently | Open | Owner |
 | What "layout" covers, now that it means customizing cleanyourtv-WebOS's launcher — a theme, a fork, a mode it adds — seen against what the installed launcher actually looks like, not decided sight unseen. The favourite look so far is still the Apple TV home screen of marcreichel/apple-tv ([references](../docs/references.md)) | Open — needs the row above first | Owner |
+| Real Plex acceptance — connect the owner's server locally and verify series grouping, actual media playback, resume and watched state on another client. The labeled demo and fake-server tests are not this acceptance | Open | Owner's local server URL and user token |
 
 ## 2. Where things went
 

@@ -2,20 +2,42 @@
 
 > **Status:** `ACTIVE`
 
-Our own home-screen layout and operating-system customization for smart TVs, starting with LG (webOS).
+Our own media interface and home-screen customization, starting with a
+**local Plex browser prototype** and LG webOS as the physical TV target.
 
-**Phase: design — there is no code yet.** What is being decided, and in what
-order, is in [the queue](.continue/README.md).
+The prototype groups series, seasons and episodes, provides explicit parent
+navigation, and synchronizes playback progress without a page reload. Plex
+remains the catalog, media and per-user playback-state server. The physical
+Home replacement under ADR-001 remains separate work.
 
 ## Getting started
 
-Nothing to install or run yet. Clone it and enable the hooks:
+Use Node.js **22.9+**. Clone it, enable the hooks, and start:
 
 ```bash
 git clone git@github.com:samirhvbr/tv.git
 cd tv
 git config core.hooksPath tools/git-hooks
+npm start
 ```
+
+Open **http://127.0.0.1:4317**. Without credentials, the interface opens a
+clearly labeled demo with an original short test video. Use **Conectar Plex**
+to enter the server base URL and user token locally. Credentials remain in the
+gateway's memory and are not saved in browser storage. For startup configuration,
+copy `.env.example` to `.env` and fill it locally before restarting.
+
+Runtime startup has no npm dependency. To run the tests:
+
+```bash
+npm ci --ignore-scripts
+npm test
+npx playwright install chromium
+npm run test:browser
+```
+
+See [browser prototype](docs/browser-prototype.md) for supported behavior,
+Plex setup, security boundaries and real-server/device acceptance limits.
 
 ## Documentation
 

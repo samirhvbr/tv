@@ -9,6 +9,33 @@ improvised at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 0.1.6 - build the Plex browser library with live playback progress
+
+The Portuguese interface now presents series, seasons and episodes with
+clickable ancestors and explicit parent actions. Browser Back/Forward, keyboard
+navigation, focus and scroll are preserved; search and watched filters work at
+each level. A native MP4 player and the locally pinned Apache-licensed hls.js
+bundle play through the gateway. Pause, seek and normal exit report progress;
+finishing an episode saves its state and returns to the same season. Failed
+final saves remain visible and retryable. Notifications update other open tabs
+without reloading the document, and the UI indicates a stale connection instead
+of silently claiming that old progress is current. Connection changes discard
+old playback safely. Credentials are cleared from the connection form and are
+never stored in browser storage.
+
+The demo contains three shows and an original 18-second synthetic video, with
+tracked HLS fixtures generated from that video. All artwork is original SVG.
+The 19 Node tests and nine Chromium browser checks passed locally on macOS with
+Node 26.8.1, including real MP4 decoding, HLS segment decoding through the Plex
+adapter fixture, final-position resume, cross-tab updates, explicit parent and
+history navigation, failed-save retry, desktop/mobile layout and keyboard
+focus/scroll restoration. A hosted GitHub workflow runs the same tests and
+checks the vendor bundle against its exact npm package. These fixtures are not
+an owner-server test: the real Plex endpoint/token, real library identification,
+codec/subtitle acceptance and physical TV deployment remain unverified. Abrupt
+browser termination only has best-effort final reporting. Setup, boundaries
+and pending acceptance are recorded in the README, runbook and browser guide.
+
 ## 0.1.6 - add a local Plex gateway for the browser prototype
 
 The owner requested an independent browser client after Plex Web made it hard

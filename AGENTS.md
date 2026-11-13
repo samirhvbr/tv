@@ -62,9 +62,11 @@ hatch declared in both, named by `HOOK_ESCAPE_VAR` at the top of each hook:
 
 **tv** — Our own home-screen layout and operating-system customization for smart TVs, starting with LG (webOS).
 
-**Phase: design — there is no code.** The route (an app installed through
-Developer Mode, or a rooted TV with the community homebrew tooling) is still
-open, in the queue — [.continue/README.md](.continue/README.md).
+**Phase: browser prototype.** The local Plex client runs independently of
+physical TV installation. [ADR-002](docs/decisions.md) records that scope and
+[docs/browser-prototype.md](docs/browser-prototype.md) describes the application.
+[ADR-001](docs/decisions.md) remains the physical Home-replacement decision;
+unfinished device and real-server acceptance stays in the queue.
 
 **First target TV: the owner's LG 43UP7500PSF** — a 2021 model on webOS 6.x,
 whose web engine is Chromium 79, with a conventional remote, on firmware
@@ -72,12 +74,15 @@ whose web engine is Chromium 79, with a conventional remote, on firmware
 TVs come after it works. What that platform allows and refuses is in
 [docs/references.md](docs/references.md).
 
-- **Stack:** not chosen. It follows from the route, and is recorded as an ADR in
-  [docs/decisions.md](docs/decisions.md) when it is.
-- **Runs locally with:** nothing yet — the repository holds documents.
-- **Tests run with:** none yet — documentation only. The first code brings the
-  first suite, and its command lands on this line before the permission to run
-  it is asked for.
+- **Stack:** Node.js 22.9+ built-ins in `server/`, browser ES modules and CSS in
+  `public/`; no installed runtime npm dependencies. Playwright and the vendored
+  hls.js build are pinned; third-party attribution lives in `NOTICE`.
+- **Runs locally with:** `npm start` → `http://127.0.0.1:4317`. Without Plex
+  credentials this is the labeled synthetic demo; local connection or ignored
+  `.env` selects the real server. Never publish credentials or a device address.
+- **Tests run with:** `npm test`; browser acceptance with `npm ci --ignore-scripts`,
+  `npx playwright install chromium`, then `npm run test:browser`. Fake-server
+  tests and demo checks do not establish real Plex or physical-TV acceptance.
 - **Never touch:** a real TV. Installing, rooting, flashing or changing a TV's
   system settings is the owner's act, never the agent's — a bricked TV is not
   undone by a revert. And because this repository is public, nothing that
