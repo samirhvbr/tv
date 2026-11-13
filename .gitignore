@@ -25,3 +25,8 @@
 # OS noise
 .DS_Store
 Thumbs.db
+
+# Reproducible dependencies and browser artifacts: docs/decisions.md ADR-003.
+node_modules/
+test-results/
+playwright-report/

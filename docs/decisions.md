@@ -10,8 +10,6 @@ the ADR.
 Numbering is sequential and never reused. A superseded ADR is not deleted: its
 status changes to `SUPERSEDED` and it names the ADR that replaced it.
 
-The template for an entry:
-
 ---
 
 ## ADR-001 — Root the first target TV, then build on cleanyourtv-WebOS
@@ -57,3 +55,60 @@ once the TV is rooted.
   (0.1.4); this ADR is what makes one of them the project's direction.
 
 ---
+
+## ADR-002 — Build the Plex browser prototype independently of TV installation
+
+**Status:** `ACCEPTED` · 13/11/2026
+
+**Context.** The owner reported a fragmented series catalog, no obvious way to
+return from one season to the season list, and watched indicators that only
+updated after manually reloading Plex Web. The owner explicitly requested a
+browser prototype in this repository using Plex Media Server for the catalog,
+media and playback state. Physical TV installation under ADR-001 is not a
+prerequisite for this work.
+
+**Decision.** Build an original Portuguese browser interface in `public/` and
+a Node.js 22.9+ gateway in `server/`, with no installed runtime npm dependencies. Bundle a pinned hls.js player
+locally under its Apache-2.0 license for browser HLS support. Keep
+series, seasons and episode identifiers from Plex; provide clickable ancestors
+and explicit parent navigation. Report playback timelines, reconcile state on
+return and focus, and update visible progress without reloading the document.
+The gateway binds only to `127.0.0.1`; it holds Plex credentials in memory or
+reads the ignored local `.env`. Media and artwork pass through fixed local
+routes so tokens never appear in browser playback URLs. A clearly labeled,
+synthetic demo exercises the UI without a Plex account. It is not evidence of
+compatibility with the owner's server or televisions.
+
+**Consequences.** Browser UI, adapter integration and playback can be tested
+before a device is modified. Real server acceptance still requires the
+owner's endpoint and user token. Bad Plex matches or an Other Videos library
+need correction rather than guessed grouping that could corrupt watch state.
+Codec, audio, subtitle and transcode behavior need validation on actual media;
+this prototype does not claim full Plex player parity. ADR-001 continues to
+record the separate physical-TV choice.
+
+The LAN Plex connection is an explicit exception to the private-address
+restriction in security §4.4: the operator selects one HTTP(S) server, and the
+application permits only the catalog, artwork, media and timeline operations
+required by this client. Per-request target URLs, embedded credentials,
+redirects, and link-local/cloud-metadata targets are rejected. All state changes
+require a local CSRF token and origin checks. The local process serves a single
+Plex identity at a time and must not be published on a network or the internet.
+
+## ADR-003 — Exclude reproducible dependencies and browser test artifacts
+
+**Status:** `ACCEPTED` · 13/11/2026
+
+**Context.** The first executable code adds pinned Playwright development
+dependencies and reproducible browser acceptance checks. Installed dependencies
+and generated reports are not project source; browser traces can also contain
+private catalog details when a real server is connected.
+
+**Decision.** Ignore only `node_modules/`, `test-results/` and
+`playwright-report/` in addition to existing exceptions. Track `package.json`,
+the exact lockfile, tests, all authored assets, and the small synthetic test
+video. Document evidence in the changelog and keep local screenshots outside
+the checkout unless deliberately reviewed for publication.
+
+**Consequences.** `npm ci` reconstructs development dependencies. Generated reports stay local or in CI artifacts rather than entering git. Runtime operation has
+no third-party npm dependency and does not need `node_modules/`.

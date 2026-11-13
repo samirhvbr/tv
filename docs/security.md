@@ -3,8 +3,8 @@
 > **Status:** `ACTIVE` — normative. In a conflict with any other document, this
 > one wins.
 >
-> **Version:** 1.0 · **Date:** 26/10/2026
-> **Supersedes:** nothing. Inherited from the fleet standard at
+> **Version:** 1.1 · **Date:** 13/11/2026
+> **Supersedes:** 1.0. Inherited from the fleet standard at
 > [samirhvbr/repodocs](https://github.com/samirhvbr/repodocs/blob/master/docs/security.md).
 > **Purpose:** make **security the top priority at all times**, even when that
 > costs performance, productivity or ease of implementation.
@@ -43,8 +43,8 @@ not a second source.
 Every decision about architecture, code or a library passes through the security
 filter first.
 
-**What this repository owns.** Today, documents only. What it will own is code
-that runs on a TV in someone's home, and the knowledge of how to get it there —
+**What this repository owns.** A local browser client and Plex gateway, plus
+the design for code that runs on a TV in someone's home and how to get it there —
 which makes the TV itself the asset: its integrity (a bad install or a failed
 root can brick it), and the means of reaching it (its address on the local
 network, the Developer Mode passphrase or device key, the LG account). This
@@ -65,6 +65,8 @@ repository is **public**, so none of those ever enter it.
 | The repository's own visibility | A private repo made public with content that assumed privacy | The pre-flight checklist in [runbook.md](runbook.md) |
 | A real TV — address, serial, MAC, Developer Mode passphrase, device key, LG account | Published in this public repository, in a config file, a log or a screenshot | Never committed; they live on the developer's machine. Examples use `192.0.2.0/24` (RFC 5737) and made-up serials |
 | The TV's integrity | An install, root or system change bricks it or leaves it exposed on the network | Acting on a real TV is the owner's act, never the agent's (`CLAUDE.md`, *Never touch*) |
+| Plex token and private catalog | A credential or personal media inventory leaks into browser URLs, logs, git, screenshots or reports | Credentials remain in server memory or ignored `.env`; fixed local API routes proxy authenticated media; no raw upstream errors or private acceptance evidence is published |
+| Local Plex gateway and watched state | An unrelated website or rebinding hostname reads private catalog data or changes playback state | Bind `127.0.0.1`; validate Host and Origin; no permissive CORS; CSRF token on mutations; only allow the operations this client needs |
 
 ## 3. General rules (mandatory)
 
@@ -114,6 +116,15 @@ and link-local ranges (`127.0.0.0/8`, `10/8`, `172.16/12`, `192.168/16`,
 `169.254/16`, `::1`, `fc00::/7`), follow no redirect into them, and prefer an
 allow-list of hosts. Cloud metadata endpoints are the target that makes this
 non-theoretical.
+
+**Local Plex exception (ADR-002).** The browser prototype intentionally connects
+to one operator-selected Plex server, which may be on the home LAN. Permit
+private and loopback addresses only for that configured HTTP(S) target, with
+fixed catalog/media/timeline routes. Reject userinfo, non-root base paths,
+query strings, fragments, link-local/cloud-metadata destinations, and upstream
+redirects. Never accept a target host or arbitrary upstream path from a media
+request. The gateway is local and serves a single Plex identity; it is not an
+internet-facing proxy or a multi-user service.
 
 ### 4.5 Mass assignment and IDOR
 Never bind a whole request payload to a model. Whitelist the fields. Every
@@ -165,6 +176,12 @@ the internet on 10/08/2026 and reselling access under fake model names.
   line.
 - Configuration lives in the environment; `.env` is never committed, and an
   `.env.example` carries the **keys with empty or dummy values** only.
+- The local connection dialog is an explicit alternative to `.env` under
+  ADR-002. It sends the token once over the same-origin loopback connection,
+  clears the input, and keeps it only in gateway memory. No browser storage,
+  media URL, API response or log may contain that token. Restarting or
+  disconnecting clears the in-memory connection; `.env` values are reloaded
+  only when the process starts.
 - **A leaked secret is rotated, not reverted.** Removing the line from HEAD
   leaves it in the history and in every clone. Rotation is the fix; the revert is
   hygiene afterwards. A rotation that is claimed but not measured has not

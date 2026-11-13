@@ -9,6 +9,27 @@ improvised at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 0.1.6 - add a local Plex gateway for the browser prototype
+
+The owner requested an independent browser client after Plex Web made it hard
+to move between seasons and required a reload to show watched state. A
+loopback-only Node gateway now exposes typed series, season, episode, artwork,
+playback and timeline routes. Plex tokens stay in gateway memory or ignored
+local configuration; range responses and HLS manifests use local URLs. A
+connection generation and per-playback session prevent an old tab from writing
+progress into a different server after reconnecting. The gateway serializes
+mutations, observes changes in visited seasons, paginates catalog responses and
+cleans up conversion sessions on normal stop or disconnect. ADR-002 records the
+browser scope and deliberate fixed-target LAN exception; ADR-003 records the
+reproducible dependency and test-artifact ignore rules. Physical TV installation
+remains separate under ADR-001.
+
+The 15 gateway HTTP tests passed against fake Plex servers, covering hierarchy,
+timelines, watched thresholds, Range and HLS routing, stale connections, parallel
+playback sessions, pagination, credentials, origin/CSRF restrictions and upstream
+failures. No owner token or endpoint was provided, so this does not establish
+acceptance against the owner's Plex or a television.
+
 ## 0.1.3 - versioning.md's bump criteria are this project's, as CLAUDE.md already had them
 
 0.1.0 replaced the skeleton's generic Z and Y examples in `CLAUDE.md` and

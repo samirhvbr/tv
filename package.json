@@ -1,0 +1,20 @@
+{
+  "name": "tv-plex-browser-prototype",
+  "version": "0.1.6",
+  "private": true,
+  "type": "module",
+  "description": "A local browser client for Plex with explicit series navigation and synchronized playback progress.",
+  "engines": {
+    "node": ">=22.9.0"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server/index.mjs",
+    "test": "node --test test/*.test.mjs",
+    "test:browser": "playwright test",
+    "check:vendor": "node tools/vendor-hls.mjs --check"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0",
+    "hls.js": "1.7.4"
+  }
+}
