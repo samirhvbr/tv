@@ -76,6 +76,15 @@ waits for the final save; finishing a video returns to the same season. Closing
 the entire browser or losing power is best effort: the last periodic/paused
 position is the recovery point if the final network request cannot complete.
 
+An interrupted player can recover without a document reload. A playing video
+that stops advancing for 12 seconds, a 20-second metadata load timeout, or a
+fatal media error can trigger up to two automatic recovery attempts; **Retomar reprodução**
+offers an explicit retry when needed. The client saves the captured position,
+requests a new media session, retires the previous session without a stale
+timeline write, and restores the position and playback intent. Failure stays
+visible. This can recover a broken playback session, but does not establish the
+cause of the owner's intermittent Plex Web stalls or repair an offline server,
+network outage, failed transcoder or unsupported codec.
 
 ## Player scope
 

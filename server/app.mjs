@@ -151,7 +151,7 @@ export async function createApp(options = {}) {
         if (!(group === 'libraries' ? validId(id) : validCatalogId(id)) || !{ libraries: 'shows', shows: 'seasons', seasons: 'episodes' }[group] || { libraries: 'shows', shows: 'seasons', seasons: 'episodes' }[group] !== action) throw new AppError(400, 'Identificador inválido.');
         json(res, await adapter[action](id)); return;
       }
-      const episodeRoute = path.match(/^\/api\/episodes\/([^/]+)(?:\/(progress|watched|playback))?$/);
+      const episodeRoute = path.match(/^\/api\/episodes\/([^/]+)(?:\/(progress|watched|playback|release))?$/);
       if (episodeRoute) {
         const [, id, action] = episodeRoute;
         if (!validId(id)) throw new AppError(400, 'Identificador inválido.');
@@ -159,6 +159,18 @@ export async function createApp(options = {}) {
         const selected = adapter;
         if (req.method === 'GET' && !action) { json(res, { episode: await selected.getEpisode(id) }); return; }
         if (req.method === 'GET' && action === 'playback') { json(res, await selected.playback(id)); return; }
+        if (req.method === 'POST' && action === 'release') {
+          const body = await jsonBody(req); fields(body, ['sessionId']);
+          if (typeof body.sessionId !== 'string' || !/^[a-f0-9-]{36}$/.test(body.sessionId)) throw new AppError(400, 'Sessão de reprodução inválida.');
+          // Recovery retires media without reporting a second, stale timeline.
+          if (selected.getSession) {
+            const session = selected.getSession(body.sessionId, true);
+            if (session.episodeId !== id) throw new AppError(409, 'A sessão de reprodução não corresponde ao episódio.');
+            await mutate(`${selected.clientId}:${id}`, () => selected.stopSession(body.sessionId));
+          } else if (mode !== 'demo') throw new AppError(404, 'Sessão de reprodução indisponível.');
+          if (selected !== adapter) throw new AppError(409, 'A conexão mudou. Atualize a biblioteca.');
+          json(res, { released: true }); return;
+        }
         if (req.method === 'POST' && ['progress', 'watched'].includes(action)) {
           const body = await jsonBody(req);
           if (action === 'progress') {

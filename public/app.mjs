@@ -1,4 +1,5 @@
 import { parseRoute, routeHash, parentRoute, progressPercent, filterItems, createSerialQueue } from './model.mjs';
+import { createPlaybackWatchdog } from './playback-recovery.mjs';
 
 const $ = selector => document.querySelector(selector);
 const main = $('#main');
@@ -84,7 +85,7 @@ function notify(message) {
 async function api(path, options = {}) {
   const { signal, method = 'GET', body, keepalive = false, connectionId = state.config?.connectionId } = options;
   const headers = method === 'POST' ? { 'Content-Type': 'application/json', 'X-CSRF-Token': state.config?.csrfToken || '' } : {};
-  if (/\/api\/episodes\/[^/]+\/(progress|watched|playback)$/.test(path) && connectionId) headers['X-Connection-Id'] = connectionId;
+  if (/\/api\/episodes\/[^/]+\/(progress|watched|playback|release)$/.test(path) && connectionId) headers['X-Connection-Id'] = connectionId;
   const controller = new AbortController();
   const abort = () => controller.abort();
   signal?.addEventListener('abort', abort, { once: true });
@@ -184,10 +185,10 @@ async function bootstrap() {
     updateConnection();
     const result = await api('/api/libraries');
     if (bootRequest !== state.bootRequest) return;
-    state.libraries = result.items.filter(library => ['show', 'shows', 'tv', 'TV Shows'].includes(library.type));
+    state.libraries = result.items.filter(library => ['show', 'shows', 'tv', 'TV Shows'].includes(library.type) || isFolderLibrary(library));
     connectEvents();
     if (!state.libraries.length) {
-      main.replaceChildren(messageView('Nenhuma biblioteca de séries', 'No Plex, a biblioteca precisa ser do tipo Séries de TV. Uma biblioteca chamada “Séries”, mas criada como Outros vídeos, não agrupa temporadas e episódios.', 'Verificar conexão', openConnection));
+      main.replaceChildren(messageView('Nenhuma biblioteca disponível', 'Conecte um servidor com séries ou vídeos organizados em pastas. Confira também se seu usuário do Plex tem acesso a essas bibliotecas.', 'Verificar conexão', openConnection));
       return;
     }
     const route = parseRoute(location.hash);
@@ -199,6 +200,10 @@ async function bootstrap() {
     if (bootRequest !== state.bootRequest) return;
     main.replaceChildren(messageView('Não conseguimos abrir sua biblioteca', error.message, 'Tentar novamente', bootstrap, true));
   }
+}
+
+function isFolderLibrary(library = state.libraries.find(item => String(item.id) === state.route.libraryId)) {
+  return library?.grouping === 'folders' || library?.type === 'folders';
 }
 
 async function fetchRouteData(route, signal) {
@@ -309,6 +314,7 @@ function render() {
   const line = element('div', 'section-title-group');
   const title = state.data.kind === 'shows' ? 'Sua biblioteca' : state.data.kind === 'seasons' ? 'Temporadas' : state.data.season?.title || `Temporada ${state.data.season?.number || ''}`;
   line.append(element('h2', '', title), element('span', 'count'));
+  if (isFolderLibrary()) line.append(element('span', 'library-kind', 'Organização por pastas'));
   group.append(line, element('p', 'section-description', state.data.kind === 'shows' ? 'Suas séries organizadas, do primeiro ao último episódio.' : state.data.kind === 'seasons' ? 'Escolha uma temporada para continuar.' : 'Seu progresso acompanha você. Sem recarregar a página.'));
   header.append(group);
   if (state.data.kind === 'shows' && state.libraries.length > 1) {
@@ -524,67 +530,241 @@ function connectEvents() {
 async function openPlayer(episode) {
   if (!episode || state.player) return;
   saveView();
-  const dialog = $('#player-dialog');
-  const body = $('#player-body');
-  const session = { id: ++playerCounter, epoch: state.connectionEpoch, connectionId: state.config.connectionId, episode, enqueue: createSerialQueue(), timer: null, video: null, closing: false, ready: false, focus: document.activeElement?.dataset.focusKey };
+  const session = {
+    id: ++playerCounter, epoch: state.connectionEpoch, connectionId: state.config.connectionId, episode,
+    enqueue: createSerialQueue(), video: null, closing: false, ready: false,
+    focus: document.activeElement?.dataset.focusKey, autoRecoveries: 0, mediaVersion: 0,
+    recovering: false, transitioning: false, playbackError: false, intentPlaying: true,
+    positionMs: episode.watched ? 0 : episode.viewOffsetMs || 0, pendingReleases: new Set(),
+    monitor: createPlaybackWatchdog(),
+  };
   state.player = session;
   $('#player-title').textContent = episode.title;
-  $('#player-context').textContent = `${state.data.show.title} · T${episode.seasonNumber} E${episode.episodeNumber}`;
+  $('#player-context').textContent = state.data.show.title + ' · T' + episode.seasonNumber + ' E' + episode.episodeNumber;
   $('#player-status').textContent = 'Preparando reprodução…';
+  $('#retry-player').hidden = true;
+  $('#retry-player').disabled = false;
   $('#player-demo').textContent = state.config.mode === 'demo' ? 'Vídeo de teste · catálogo demonstrativo' : '';
-  body.replaceChildren(element('span', 'spinner'));
-  dialog.showModal();
+  $('#player-body').replaceChildren(element('span', 'spinner'));
+  $('#player-dialog').showModal();
+  session.timer = setInterval(() => {
+    if (!session.recovering && !session.playbackError && session.video && !session.video.paused && !session.video.ended) reportProgress(session, 'playing').catch(() => {});
+  }, 10000);
+  session.watchTimer = setInterval(() => {
+    const video = session.video;
+    if (!video || !isCurrentPlayer(session) || session.recovering || session.playbackError) return;
+    if (session.monitor.observe({ currentTime: video.currentTime, playing: session.intentPlaying, paused: video.paused, seeking: video.seeking, ended: video.ended, ready: session.ready, hidden: document.hidden })) {
+      recoverPlayer(session, false, 'O vídeo parou de avançar.');
+    }
+  }, 1000);
   try {
-    const playback = await api(`/api/episodes/${encodeURIComponent(episode.id)}/playback`, { connectionId: session.connectionId });
-    if (state.player !== session) return;
-    const url = safeLocalUrl(playback.url);
-    if (!url) throw new Error('O servidor retornou um endereço de reprodução inválido.');
-    const video = element('video');
-    video.controls = true;
-    video.playsInline = true;
-    video.preload = 'metadata';
-    video.setAttribute('aria-label', `Reproduzir ${episode.title}`);
-    const hls = /mpegurl/i.test(playback.mimeType || '') || /\.m3u8(?:\?|$)/i.test(url);
-    const nativeHls = video.canPlayType('application/vnd.apple.mpegurl');
-    if (hls && !nativeHls && !window.Hls?.isSupported()) throw new Error('Este navegador não oferece reprodução HLS compatível. Tente um navegador atualizado ou uma versão MP4/H.264 no Plex.');
-    session.video = video;
-    session.playback = playback;
+    const playback = await api('/api/episodes/' + encodeURIComponent(episode.id) + '/playback', { connectionId: session.connectionId });
+    if (!isCurrentPlayer(session)) { releasePlayback(session, playback.sessionId); return; }
+    const resumeMs = episode.watched ? 0 : playback.viewOffsetMs || episode.viewOffsetMs || 0;
+    await attachPlayback(session, playback, { timeMs: resumeMs, paused: false });
+  } catch (error) {
+    if (!isCurrentPlayer(session)) return;
+    if (!session.video) $('#player-body').replaceChildren(messageView('Não foi possível iniciar o vídeo', error.message));
+    recoverPlayer(session, false, error.message);
+  }
+}
+
+function isCurrentPlayer(session) {
+  return state.player === session && session.epoch === state.connectionEpoch && !session.closing;
+}
+
+function playbackSnapshot(session) {
+  const video = session.video;
+  if (video && session.ready && !session.transitioning && !video.error) session.positionMs = Math.round(video.currentTime * 1000);
+  return {
+    timeMs: session.positionMs || 0,
+    durationMs: video && Number.isFinite(video.duration) ? Math.round(video.duration * 1000) : session.episode.durationMs,
+    paused: !session.intentPlaying,
+  };
+}
+
+function showPlaybackFailure(session, message) {
+  if (!isCurrentPlayer(session)) return;
+  session.playbackError = true;
+  session.transitioning = true;
+  session.video?.pause();
+  session.transitioning = false;
+  $('#player-status').textContent = message + ' Use “Retomar reprodução” para tentar novamente deste ponto.';
+  $('#retry-player').hidden = false;
+  $('#retry-player').disabled = false;
+}
+
+async function releasePlayback(session, sessionId) {
+  if (!sessionId || session.epoch !== state.connectionEpoch) return;
+  try {
+    await api('/api/episodes/' + encodeURIComponent(session.episode.id) + '/release', { method: 'POST', body: { sessionId }, connectionId: session.connectionId });
+    session.pendingReleases.delete(sessionId);
+  } catch { session.pendingReleases.add(sessionId); }
+}
+
+function teardownMedia(session) {
+  session.mediaVersion++;
+  session.cancelMediaLoad?.();
+  session.cancelMediaLoad = null;
+  session.ready = false;
+  session.video?.pause();
+  session.hls?.destroy();
+  session.hls = null;
+  session.video?.removeAttribute('src');
+  session.video?.load();
+}
+
+function attachPlayback(session, playback, snapshot) {
+  const url = safeLocalUrl(playback.url);
+  if (!url) return Promise.reject(new Error('O servidor retornou um endereço de reprodução inválido.'));
+  teardownMedia(session);
+  const version = session.mediaVersion;
+  const video = element('video');
+  video.controls = true;
+  video.playsInline = true;
+  video.preload = 'auto';
+  video.setAttribute('aria-label', 'Reproduzir ' + session.episode.title);
+  session.video = video;
+  session.playback = playback;
+  session.positionMs = snapshot.timeMs;
+  session.intentPlaying = !snapshot.paused;
+  session.transitioning = true;
+  session.playbackError = false;
+  session.monitor.reset();
+  const current = () => isCurrentPlayer(session) && version === session.mediaVersion;
+  $('#player-body').replaceChildren(video);
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = error => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      session.cancelMediaLoad = null;
+      error ? reject(error) : resolve();
+    };
+    const timer = setTimeout(() => finish(new Error('O vídeo demorou para responder.')), 20000);
+    session.cancelMediaLoad = () => finish(new Error('A sessão de reprodução foi encerrada.'));
+    const fail = message => {
+      if (!current()) return;
+      if (!settled) finish(new Error(message));
+      else recoverPlayer(session, false, message);
+    };
     video.addEventListener('loadedmetadata', () => {
-      if (state.player !== session) return;
-      const resumeMs = episode.watched ? 0 : playback.viewOffsetMs || episode.viewOffsetMs || 0;
-      if (resumeMs > 0 && Number.isFinite(video.duration)) video.currentTime = Math.min(resumeMs / 1000, Math.max(0, video.duration - 1));
+      if (!current()) return;
+      const resumeSeconds = Math.max(0, snapshot.timeMs / 1000);
+      const target = Number.isFinite(video.duration) ? Math.min(resumeSeconds, Math.max(0, video.duration - 0.1)) : resumeSeconds;
+      if (target > 0) video.currentTime = target;
       session.ready = true;
-      $('#player-status').textContent = resumeMs > 0 ? `Retomando em ${formatTime(resumeMs)}` : 'Pronto para assistir';
-      video.play().catch(() => { $('#player-status').textContent = 'Pressione reproduzir para começar.'; });
+      session.transitioning = false;
+      session.monitor.reset();
+      $('#player-status').textContent = snapshot.paused ? 'Pausado em ' + formatTime(snapshot.timeMs) : snapshot.timeMs > 0 ? 'Retomando em ' + formatTime(snapshot.timeMs) : 'Pronto para assistir';
+      $('#retry-player').hidden = true;
+      if (!snapshot.paused && !session.closeRequested) video.play().catch(() => {
+        if (!current() || video.error) return;
+        session.intentPlaying = false;
+        $('#player-status').textContent = 'Pressione reproduzir para continuar.';
+      });
+      finish();
     }, { once: true });
-    video.addEventListener('play', () => reportProgress(session, 'playing').catch(() => {}));
-    video.addEventListener('pause', () => { if (!session.closing && !video.ended) reportProgress(session, 'paused').catch(() => {}); });
-    video.addEventListener('seeked', () => reportProgress(session, video.paused ? 'paused' : 'playing').catch(() => {}));
-    video.addEventListener('ended', () => { if (state.player === session) closePlayer(); });
-    video.addEventListener('error', () => { $('#player-status').textContent = 'Não foi possível reproduzir este formato. Tente uma versão MP4/H.264 compatível com o navegador.'; });
-    session.timer = setInterval(() => { if (!video.paused && !video.ended) reportProgress(session, 'playing').catch(() => {}); }, 10000);
-    body.replaceChildren(video);
-    if (hls && !nativeHls) {
+    video.addEventListener('timeupdate', () => {
+      if (!current() || !session.ready || session.transitioning || video.error) return;
+      session.positionMs = Math.round(video.currentTime * 1000);
+    });
+    video.addEventListener('play', () => {
+      if (!current() || session.transitioning) return;
+      session.intentPlaying = true;
+      session.monitor.reset();
+      reportProgress(session, 'playing').catch(() => {});
+    });
+    video.addEventListener('playing', () => {
+      if (!current()) return;
+      session.buffering = false;
+      session.playbackError = false;
+      $('#retry-player').hidden = true;
+      $('#player-status').textContent = 'Reproduzindo · ' + formatTime(session.positionMs);
+    });
+    video.addEventListener('pause', () => {
+      if (!current() || session.transitioning || session.recovering || session.playbackError || video.ended || video.error) return;
+      session.intentPlaying = false;
+      session.monitor.reset();
+      reportProgress(session, 'paused').catch(() => {});
+    });
+    video.addEventListener('seeked', () => {
+      if (!current() || session.transitioning) return;
+      session.monitor.reset();
+      reportProgress(session, video.paused ? 'paused' : 'playing').catch(() => {});
+    });
+    for (const event of ['waiting', 'stalled']) video.addEventListener(event, () => {
+      if (!current() || session.recovering) return;
+      session.buffering = true;
+      $('#player-status').textContent = 'Aguardando o vídeo… A reprodução será retomada se a conexão responder.';
+    });
+    video.addEventListener('ended', () => { if (current()) closePlayer(); });
+    video.addEventListener('error', () => fail('A reprodução foi interrompida.'));
+    const hls = /mpegurl/i.test(playback.mimeType || '') || /\.m3u8(?:\?|$)/i.test(url);
+    if (hls && !video.canPlayType('application/vnd.apple.mpegurl')) {
+      if (!window.Hls?.isSupported()) { finish(new Error('Este navegador não oferece reprodução HLS compatível.')); return; }
       const hlsPlayer = new window.Hls({ enableWorker: false });
       session.hls = hlsPlayer;
       hlsPlayer.on(window.Hls.Events.ERROR, (_event, data) => {
-        if (data.fatal && state.player === session) $('#player-status').textContent = 'A transmissão foi interrompida. Volte aos episódios e tente novamente.';
+        if (data.fatal) fail('A transmissão foi interrompida.');
       });
       hlsPlayer.loadSource(url);
       hlsPlayer.attachMedia(video);
     } else video.src = url;
-  } catch (error) {
-    if (state.player !== session) return;
-    body.replaceChildren(messageView('Não foi possível iniciar o vídeo', error.message, 'Voltar aos episódios', closePlayer, true));
-    $('#player-status').textContent = 'Reprodução indisponível';
-  }
+  });
 }
 
-function reportProgress(session, playbackState, keepalive = false) {
-  if (!session.video || !session.ready) return Promise.resolve();
+function recoverPlayer(session, manual = false, reason = 'A reprodução foi interrompida.') {
+  if (!isCurrentPlayer(session) || session.recovering) return session.recoveryPromise;
+  if (!manual && session.autoRecoveries >= 2) { showPlaybackFailure(session, 'Não conseguimos restabelecer a reprodução automaticamente.'); return; }
+  if (!manual) session.autoRecoveries++;
+  clearTimeout(session.recoveryTimer);
+  const snapshot = playbackSnapshot(session);
+  const oldSessionId = session.playback?.sessionId;
+  session.mediaVersion++;
+  session.recovering = true;
+  session.transitioning = true;
+  session.playbackError = false;
+  session.video?.pause();
+  $('#retry-player').hidden = false;
+  $('#retry-player').disabled = true;
+  $('#player-status').textContent = manual ? 'Retomando de ' + formatTime(snapshot.timeMs) + '…' : reason + ' Reconectando (' + session.autoRecoveries + '/2)…';
+  session.recoveryPromise = (async () => {
+    try {
+      if (session.ready) await reportProgress(session, 'paused', false, snapshot);
+      if (!isCurrentPlayer(session)) return;
+      const playback = await api('/api/episodes/' + encodeURIComponent(session.episode.id) + '/playback', { connectionId: session.connectionId });
+      if (!isCurrentPlayer(session)) { releasePlayback(session, playback.sessionId); return; }
+      session.playback = playback;
+      if (oldSessionId) await releasePlayback(session, oldSessionId);
+      if (!isCurrentPlayer(session)) { releasePlayback(session, playback.sessionId); return; }
+      for (const id of [...session.pendingReleases]) if (id !== oldSessionId) releasePlayback(session, id);
+      await attachPlayback(session, playback, snapshot);
+    } catch (error) {
+      if (!isCurrentPlayer(session)) return;
+      session.transitioning = false;
+      showPlaybackFailure(session, error.message);
+      if (!manual && !session.closeRequested && error.status !== 409 && session.autoRecoveries < 2) {
+        session.recoveryTimer = setTimeout(() => recoverPlayer(session, false, 'A conexão ainda não respondeu.'), 2000);
+      }
+    } finally {
+      session.recovering = false;
+      session.transitioning = false;
+      if (state.player === session) $('#retry-player').disabled = false;
+    }
+  })();
+  return session.recoveryPromise;
+}
+
+function reportProgress(session, playbackState, keepalive = false, snapshot = null) {
+  if (!session.playback || (!session.ready && !snapshot)) return Promise.resolve();
+  if ((session.recovering || session.transitioning) && !snapshot && playbackState !== 'stopped') return Promise.resolve();
+  const position = snapshot || playbackSnapshot(session);
+  const mediaVersion = session.mediaVersion;
   const payload = {
-    timeMs: Math.round(session.video.currentTime * 1000),
-    durationMs: Number.isFinite(session.video.duration) ? Math.round(session.video.duration * 1000) : session.episode.durationMs,
+    timeMs: position.timeMs,
+    durationMs: position.durationMs,
     state: playbackState,
     ...(session.playback?.sessionId && { sessionId: session.playback.sessionId }),
   };
@@ -593,13 +773,13 @@ function reportProgress(session, playbackState, keepalive = false) {
     if (session.epoch !== state.connectionEpoch) return;
     try {
       const result = await api(`/api/episodes/${encodeURIComponent(session.episode.id)}/progress`, { method: 'POST', body: payload, keepalive, connectionId: session.connectionId });
-      if (state.player === session && session.epoch === state.connectionEpoch) {
+      if (state.player === session && session.epoch === state.connectionEpoch && mediaVersion === session.mediaVersion) {
         applyEpisode(result.episode);
-        $('#player-status').textContent = playbackState === 'stopped' ? 'Progresso salvo' : `Progresso salvo · ${formatTime(payload.timeMs)}`;
+        if (!session.recovering && !session.playbackError && !session.buffering) $('#player-status').textContent = playbackState === 'stopped' ? 'Progresso salvo' : `Progresso salvo · ${formatTime(payload.timeMs)}`;
       }
       return result;
     } catch (error) {
-      if (state.player === session) $('#player-status').textContent = 'Não foi possível salvar o progresso. Tente voltar novamente para reenviar.';
+      if (state.player === session && session.epoch === state.connectionEpoch && mediaVersion === session.mediaVersion) $('#player-status').textContent = 'Não foi possível salvar o progresso. Tente voltar novamente para reenviar.';
       throw error;
     }
   });
@@ -607,13 +787,20 @@ function reportProgress(session, playbackState, keepalive = false) {
 
 async function closePlayer() {
   const session = state.player;
-  if (!session || session.closing) return;
-  session.closing = true;
+  if (!session || session.closing || session.closeRequested) return;
+  session.closeRequested = true;
+  clearTimeout(session.recoveryTimer);
   clearInterval(session.timer);
+  clearInterval(session.watchTimer);
   $('#close-player').disabled = true;
-  session.video?.pause();
   try {
-    await reportProgress(session, 'stopped');
+    if (session.recovering) await session.recoveryPromise;
+    if (state.player !== session) return;
+    const snapshot = playbackSnapshot(session);
+    session.closing = true;
+    session.video?.pause();
+    await reportProgress(session, 'stopped', false, snapshot);
+    for (const id of [...session.pendingReleases]) releasePlayback(session, id);
     disposePlayer(session);
     state.player = null;
     await refreshVisible();
@@ -629,6 +816,7 @@ async function closePlayer() {
     } else {
       notify('O vídeo está pausado. Tente voltar novamente para salvar seu progresso.');
       session.closing = false;
+      session.closeRequested = false;
     }
   } finally { $('#close-player').disabled = false; }
 }
@@ -636,10 +824,9 @@ async function closePlayer() {
 function disposePlayer(session) {
   session.closing = true;
   clearInterval(session.timer);
-  session.video?.pause();
-  session.hls?.destroy();
-  session.video?.removeAttribute('src');
-  session.video?.load();
+  clearInterval(session.watchTimer);
+  clearTimeout(session.recoveryTimer);
+  teardownMedia(session);
   $('#player-dialog').close();
   $('#player-body').replaceChildren();
 }
@@ -698,6 +885,7 @@ $('#disconnect').addEventListener('click', async () => {
   finally { $('#disconnect').disabled = false; state.changingConnection = false; }
 });
 $('#close-player').addEventListener('click', closePlayer);
+$('#retry-player').addEventListener('click', () => { if (state.player) recoverPlayer(state.player, true); });
 $('#player-dialog').addEventListener('cancel', event => { event.preventDefault(); closePlayer(); });
 window.addEventListener('hashchange', async () => {
   saveView();

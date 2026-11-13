@@ -36,7 +36,9 @@ are read again. See [browser-prototype.md](browser-prototype.md).
 Native TV libraries and Other Videos libraries using the Personal Media agent
 are supported. Other Videos grouping is local to the gateway, uses existing
 folder names, and does not edit files or Plex settings. Ordinary movie libraries
-are not part of this series catalog.
+are not part of this series catalog. When playback stalls, use **Retomar
+reprodução** to replace the media session while keeping the current position.
+An offline server or failed transcoder can still prevent recovery.
 
 ## 4. Deploy
 

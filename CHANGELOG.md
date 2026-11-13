@@ -9,6 +9,19 @@ improvised at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 0.1.7 - recover interrupted playback without reloading the library
+
+The player detects prolonged playback stalls, bounds automatic recovery, and
+offers an explicit retry that replaces only the media session while preserving
+the current position and playback intent. Retired media sessions are released
+without rewriting the timeline. A visible error remains when recovery cannot
+complete; an interrupted network or unsupported format is not claimed fixed.
+The 14 Chromium browser checks passed, including actual MP4 and HLS decoding,
+bounded automatic attempts, manual resume, an interrupted HTTP stream,
+connection changes and unchanged document identity. The 32 Node checks also
+passed, including session retirement and watchdog exclusions. These synthetic
+failures do not diagnose the owner's intermittent Plex Web freeze.
+
 ## 0.1.7 - group Other Videos into series and seasons from existing folders
 
 The owner connected a real Plex server whose series libraries use Other Videos,
