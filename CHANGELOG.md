@@ -9,6 +9,23 @@ improvised at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 0.1.8 - connect Plex reliably from the local connection form
+
+The owner reported submitting the server URL and token without an error while
+the prototype stayed in demonstration mode. Two isolated reproductions exposed
+form defects: the button style overrode HTML's hidden attribute, leaving the
+demo-disconnect action visible and reachable by Tab then Enter; and an address
+without a URL scheme failed native validation before the submit handler could
+show an application error. Hidden controls now stay hidden, the form accepts
+host:port addresses, and success requires a confirmed Plex connection rather
+than an unverified successful HTTP response. Four regression cases failed on
+the unchanged assets; the full suite of 20 Chromium checks passed after the
+fix, and all six connection-specific checks passed again after tightening token
+cleanup. The 32 Node checks also passed. Invalid credentials and inconsistent
+connection confirmations stay visible as errors instead of announcing success.
+This updates browser assets without restarting the owner's running gateway or
+disclosing its token; a real connection still requires local credential entry.
+
 ## 0.1.7 - recover interrupted playback without reloading the library
 
 The player detects prolonged playback stalls, bounds automatic recovery, and

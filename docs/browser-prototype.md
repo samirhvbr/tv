@@ -23,6 +23,18 @@ token of the Plex user whose catalog and watch state should be used. The token
 is sent to the local gateway and cleared from the form; it is never stored in
 the browser. The connection lasts until disconnect or gateway restart.
 
+The form accepts an HTTP(S) URL or a plain `host:port` address; the latter uses
+HTTP, for example `192.0.2.10:32400`. The demo-disconnect control is absent in
+demo mode and cannot take keyboard focus. On a connected server, **Desconectar
+Plex** explicitly returns to the demo. Successful connection feedback requires
+both a Plex-mode response and confirmation of the current connection from the
+gateway. Failed authentication remains visible in the dialog.
+
+Browser asset changes only require reloading the page, not restarting the
+gateway. A page reload preserves an existing in-memory Plex connection; a
+gateway restart clears it. An already running gateway reports its startup
+version even if newer browser assets have been loaded.
+
 Alternatively, copy `.env.example` to `.env`, set `PLEX_SERVER_URL` and
 `PLEX_TOKEN` locally, and restart the gateway. `.env` is ignored. Never paste
 tokens into issues, screenshots or commits. The official explanation of a Plex

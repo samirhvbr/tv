@@ -1,6 +1,6 @@
 {
   "name": "tv-plex-browser-prototype",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "private": true,
   "type": "module",
   "description": "A local browser client for Plex with explicit series navigation and synchronized playback progress.",

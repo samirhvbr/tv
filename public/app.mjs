@@ -1,5 +1,6 @@
 import { parseRoute, routeHash, parentRoute, progressPercent, filterItems, createSerialQueue } from './model.mjs';
 import { createPlaybackWatchdog } from './playback-recovery.mjs';
+import { normalizeServerUrl, requirePlexConnection } from './connection.mjs';
 
 const $ = selector => document.querySelector(selector);
 const main = $('#main');
@@ -858,18 +859,23 @@ $('#connection-form').addEventListener('submit', async event => {
   const body = { serverUrl: $('#server-url').value.trim(), token: $('#plex-token').value.trim() };
   $('#plex-token').value = '';
   try {
-    await api('/api/connect', { method: 'POST', body });
+    body.serverUrl = normalizeServerUrl(body.serverUrl);
+    $('#server-url').value = body.serverUrl;
+    if (!body.token) throw new Error('Informe o token de acesso do Plex.');
+    const response = await api('/api/connect', { method: 'POST', body });
     body.token = '';
-    $('#connection-dialog').close();
+    const connected = requirePlexConnection(response);
+    requirePlexConnection(await api('/api/config'), connected.connectionId);
     snapshots.clear();
     history.replaceState(null, '', '#/');
     await bootstrap();
+    requirePlexConnection(state.config, connected.connectionId);
+    $('#connection-dialog').close();
     notify('Biblioteca conectada. Escolha uma série para começar.');
   } catch (error) {
-    body.token = '';
     $('#connection-error').textContent = error.message;
     $('#connection-error').hidden = false;
-  } finally { submit.disabled = false; state.changingConnection = false; }
+  } finally { body.token = ''; submit.disabled = false; state.changingConnection = false; }
 });
 $('#disconnect').addEventListener('click', async () => {
   $('#disconnect').disabled = true;

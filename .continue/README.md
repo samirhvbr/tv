@@ -1,6 +1,6 @@
 # `.continue/` — the queue
 
-> **Status:** `ACTIVE` · Last reviewed 13/11/2026, repository at 0.1.7
+> **Status:** `ACTIVE` · Last reviewed 13/11/2026, repository at 0.1.8
 
 Work in progress: drafts, plans under discussion, notes on things still being
 built, briefings for picking the work back up later.
@@ -42,7 +42,7 @@ here would be a second source of truth.
 | Acceptance on the other TVs — the owner supplied 55NANO80TSA / webOS 25 and 49UM731C0SA / webOS 4; no browser prototype or root path has been tested on either physical unit | Open | Owner, after browser acceptance |
 | The first target TV rooted and running cleanyourtv-WebOS — [ADR-001](../docs/decisions.md) decided the physical route; the owner runs the upstream tools. The browser prototype in ADR-002 proceeds independently | Open | Owner |
 | What "layout" covers, now that it means customizing cleanyourtv-WebOS's launcher — a theme, a fork, a mode it adds — seen against what the installed launcher actually looks like, not decided sight unseen. The favourite look so far is still the Apple TV home screen of marcreichel/apple-tv ([references](../docs/references.md)) | Open — needs the row above first | Owner |
-| Real Plex acceptance — authentication succeeded, but 0.1.6 found no native TV libraries. Verify the folder-based Other Videos hierarchy, actual media playback, resume, recovery and watch state on another client with 0.1.7. Synthetic fixtures are not this acceptance | Open | Local connection after gateway restart |
+| Real Plex acceptance — verify the folder-based Other Videos hierarchy, actual playback, resume, recovery and watch state on another client. Authentication succeeded on 0.1.6; the 0.1.8 form fixes a silent path back to demo and does not require a gateway restart. Synthetic fixtures are not real acceptance | Open | Confirmed local Plex connection |
 
 ## 2. Where things went
 

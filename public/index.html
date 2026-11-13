@@ -39,12 +39,12 @@
   <dialog id="connection-dialog" class="connection-dialog" aria-labelledby="connection-title">
     <div class="dialog-heading"><div><p class="eyebrow">SUA BIBLIOTECA</p><h2 id="connection-title">Conectar ao Plex</h2></div><button class="icon-button close-connection" type="button" aria-label="Fechar conexão"><svg class="icon"><use href="#i-close"/></svg></button></div>
     <p class="dialog-intro">Traga suas séries, temporadas e o ponto onde parou.</p>
-    <form id="connection-form">
-      <label for="server-url">Endereço do servidor</label><input id="server-url" name="serverUrl" type="url" placeholder="http://servidor:32400" autocomplete="off" required>
+    <form id="connection-form" novalidate>
+      <label for="server-url">Endereço do servidor</label><input id="server-url" name="serverUrl" type="text" inputmode="url" placeholder="http://servidor:32400 ou servidor:32400" autocomplete="off" autocapitalize="none" spellcheck="false" required>
       <label for="plex-token">Token de acesso do Plex</label><input id="plex-token" name="token" type="password" autocomplete="off" required>
       <p class="field-help">O token fica apenas na memória deste servidor local. Não é salvo no navegador.</p>
       <p id="connection-error" class="form-error" role="alert" hidden></p>
-      <div class="dialog-actions"><button id="disconnect" class="button" type="button" hidden>Voltar à demonstração</button><button id="connect-submit" class="button button-primary" type="submit">Conectar biblioteca <span aria-hidden="true">→</span></button></div>
+      <div class="dialog-actions"><button id="disconnect" class="button" type="button" hidden>Desconectar Plex</button><button id="connect-submit" class="button button-primary" type="submit">Conectar biblioteca <span aria-hidden="true">→</span></button></div>
     </form>
   </dialog>
   <dialog id="player-dialog" class="player-dialog" aria-labelledby="player-title">
