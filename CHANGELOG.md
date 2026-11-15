@@ -9,6 +9,62 @@ improvised at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 0.1.9 - Update the Node setup action to 7.1.0
+
+The prototype workflow uses the reviewed setup-node 7.1.0 commit, still pinned
+by its full SHA. The workflow keeps Node 22, npm's lockfile cache and read-only
+repository permissions. The action itself runs on Node 24 on GitHub's hosted
+runner; this does not change the prototype's runtime. This incorporates
+Dependabot PR #1 after bringing its branch up to the current master.
+
+## 0.1.8 - connect Plex reliably from the local connection form
+
+The owner reported submitting the server URL and token without an error while
+the prototype stayed in demonstration mode. Two isolated reproductions exposed
+form defects: the button style overrode HTML's hidden attribute, leaving the
+demo-disconnect action visible and reachable by Tab then Enter; and an address
+without a URL scheme failed native validation before the submit handler could
+show an application error. Hidden controls now stay hidden, the form accepts
+host:port addresses, and success requires a confirmed Plex connection rather
+than an unverified successful HTTP response. Four regression cases failed on
+the unchanged assets; the full suite of 20 Chromium checks passed after the
+fix, and all six connection-specific checks passed again after tightening token
+cleanup. The 32 Node checks also passed. Invalid credentials and inconsistent
+connection confirmations stay visible as errors instead of announcing success.
+This updates browser assets without restarting the owner's running gateway or
+disclosing its token; a real connection still requires local credential entry.
+
+## 0.1.7 - recover interrupted playback without reloading the library
+
+The player detects prolonged playback stalls, bounds automatic recovery, and
+offers an explicit retry that replaces only the media session while preserving
+the current position and playback intent. Retired media sessions are released
+without rewriting the timeline. A visible error remains when recovery cannot
+complete; an interrupted network or unsupported format is not claimed fixed.
+The 14 Chromium browser checks passed, including actual MP4 and HLS decoding,
+bounded automatic attempts, manual resume, an interrupted HTTP stream,
+connection changes and unchanged document identity. The 32 Node checks also
+passed, including session retirement and watchdog exclusions. These synthetic
+failures do not diagnose the owner's intermittent Plex Web freeze.
+
+## 0.1.7 - group Other Videos into series and seasons from existing folders
+
+The owner connected a real Plex server whose series libraries use Other Videos,
+so the original TV-library-only adapter returned no catalog. The gateway now
+builds a local hierarchy from existing folder paths and season/episode markers.
+Virtual parents never become Plex metadata identifiers: playback and watch
+state continue to use each original video ratingKey. No server file is renamed,
+moved or edited, and the gateway does not change Plex library settings or
+metadata. Ambiguous content remains separated rather than silently merged.
+ADR-004 records this explicit change of scope. The 32 Node checks passed,
+including ten folder/catalog cases for release folders, Windows paths, ambiguous
+roots, omitted zero-state fields, pagination, cache expiry, stale responses and
+removed seasons. The 14 Chromium checks passed; after the final state-refresh
+change, the affected Other Videos browser check passed again. Real Plex
+authentication was confirmed on 0.1.6, but folder acceptance and actual-media
+playback on the owner's server await local reconnection after the gateway
+restart. No private address, token, inventory or screenshot is published.
+
 ## 0.1.6 - build the Plex browser library with live playback progress
 
 The Portuguese interface now presents series, seasons and episodes with

@@ -10,6 +10,12 @@ navigation, and synchronizes playback progress without a page reload. Plex
 remains the catalog, media and per-user playback-state server. The physical
 Home replacement under ADR-001 remains separate work.
 
+TV libraries use Plex's native hierarchy. Other Videos libraries can use a
+local hierarchy inferred from their existing folders, while playback keeps the
+original Plex video identity and history. No server files are renamed or moved.
+Interrupted playback has bounded recovery and an explicit retry without a
+page reload; network and codec compatibility still need actual-media validation.
+
 ## Getting started
 
 Use Node.js **22.9+**. Clone it, enable the hooks, and start:

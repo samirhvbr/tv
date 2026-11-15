@@ -10,6 +10,7 @@ import { DemoAdapter } from './demo.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.mp4': 'video/mp4', '.woff2': 'font/woff2', '.ico': 'image/x-icon' };
+const validCatalogId = value => validId(value) || /^fs_[a-f0-9]{32}$/.test(value);
 
 async function jsonBody(req) {
   if (!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type'] || '')) throw new AppError(415, 'Envie os dados no formato JSON.');
@@ -147,10 +148,10 @@ export async function createApp(options = {}) {
       const hierarchy = path.match(/^\/api\/(libraries|shows|seasons)\/([^/]+)\/(shows|seasons|episodes)$/);
       if (req.method === 'GET' && hierarchy) {
         const [, group, id, action] = hierarchy;
-        if (!validId(id) || !{ libraries: 'shows', shows: 'seasons', seasons: 'episodes' }[group] || { libraries: 'shows', shows: 'seasons', seasons: 'episodes' }[group] !== action) throw new AppError(400, 'Identificador inválido.');
+        if (!(group === 'libraries' ? validId(id) : validCatalogId(id)) || !{ libraries: 'shows', shows: 'seasons', seasons: 'episodes' }[group] || { libraries: 'shows', shows: 'seasons', seasons: 'episodes' }[group] !== action) throw new AppError(400, 'Identificador inválido.');
         json(res, await adapter[action](id)); return;
       }
-      const episodeRoute = path.match(/^\/api\/episodes\/([^/]+)(?:\/(progress|watched|playback))?$/);
+      const episodeRoute = path.match(/^\/api\/episodes\/([^/]+)(?:\/(progress|watched|playback|release))?$/);
       if (episodeRoute) {
         const [, id, action] = episodeRoute;
         if (!validId(id)) throw new AppError(400, 'Identificador inválido.');
@@ -158,6 +159,18 @@ export async function createApp(options = {}) {
         const selected = adapter;
         if (req.method === 'GET' && !action) { json(res, { episode: await selected.getEpisode(id) }); return; }
         if (req.method === 'GET' && action === 'playback') { json(res, await selected.playback(id)); return; }
+        if (req.method === 'POST' && action === 'release') {
+          const body = await jsonBody(req); fields(body, ['sessionId']);
+          if (typeof body.sessionId !== 'string' || !/^[a-f0-9-]{36}$/.test(body.sessionId)) throw new AppError(400, 'Sessão de reprodução inválida.');
+          // Recovery retires media without reporting a second, stale timeline.
+          if (selected.getSession) {
+            const session = selected.getSession(body.sessionId, true);
+            if (session.episodeId !== id) throw new AppError(409, 'A sessão de reprodução não corresponde ao episódio.');
+            await mutate(`${selected.clientId}:${id}`, () => selected.stopSession(body.sessionId));
+          } else if (mode !== 'demo') throw new AppError(404, 'Sessão de reprodução indisponível.');
+          if (selected !== adapter) throw new AppError(409, 'A conexão mudou. Atualize a biblioteca.');
+          json(res, { released: true }); return;
+        }
         if (req.method === 'POST' && ['progress', 'watched'].includes(action)) {
           const body = await jsonBody(req);
           if (action === 'progress') {

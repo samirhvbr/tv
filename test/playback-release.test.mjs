@@ -1,0 +1,36 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { once } from 'node:events';
+import { randomUUID } from 'node:crypto';
+import { createApp } from '../server/app.mjs';
+import { startPlexFixture } from './browser/plex-fixture.mjs';
+
+test('retiring a playback session preserves the last timeline and the replacement stream', async t => {
+  const plex = await startPlexFixture();
+  t.after(() => plex.close());
+  const server = await createApp({ plexServerUrl: plex.url, plexToken: plex.token });
+  server.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  t.after(() => server.shutdown());
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const config = await (await fetch(base + '/api/config')).json();
+  const headers = { 'X-CSRF-Token': config.csrfToken, 'X-Connection-Id': config.connectionId, 'Content-Type': 'application/json' };
+  const descriptor = async () => (await fetch(base + '/api/episodes/9011/playback', { headers })).json();
+  const post = (path, body, extra = {}) => fetch(base + path, { method: 'POST', headers: { ...headers, ...extra }, body: JSON.stringify(body) });
+  const old = await descriptor();
+  assert.equal((await post('/api/episodes/9011/progress', { timeMs: 4000, durationMs: 18000, state: 'paused', sessionId: old.sessionId })).status, 200);
+  const replacement = await descriptor();
+  const reportsBeforeRelease = plex.reports.length;
+  assert.equal((await post('/api/episodes/9011/release', { sessionId: old.sessionId })).status, 200);
+  assert.equal((await post('/api/episodes/9011/release', { sessionId: old.sessionId })).status, 200);
+  assert.equal(plex.reports.length, reportsBeforeRelease);
+  assert.equal(plex.data['9011'].viewOffset, 4000);
+  assert.equal((await fetch(base + old.url)).status, 404);
+  assert.equal((await fetch(base + replacement.url)).status, 200);
+  assert.equal((await post('/api/episodes/9012/release', { sessionId: replacement.sessionId })).status, 409);
+  assert.equal((await post('/api/episodes/9011/release', { sessionId: replacement.sessionId }, { 'X-CSRF-Token': '' })).status, 403);
+  assert.equal((await post('/api/episodes/9011/release', { sessionId: replacement.sessionId }, { 'X-Connection-Id': randomUUID() })).status, 409);
+  assert.equal((await post('/api/episodes/9011/release', { sessionId: randomUUID() })).status, 404);
+  assert.equal((await post('/api/episodes/fs_00000000000000000000000000000000/progress', { timeMs: 1, durationMs: 10, state: 'playing' })).status, 400);
+  assert.equal((await post('/api/episodes/9011/release', { sessionId: replacement.sessionId, target: 'untrusted' })).status, 400);
+});
