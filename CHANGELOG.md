@@ -9,6 +9,14 @@ improvised at `git commit` time.
 Bodies are narrative: what changed, why, and what was measured. This file is
 never rewritten.
 
+## 0.1.9 - Update the Node setup action to 7.1.0
+
+The prototype workflow uses the reviewed setup-node 7.1.0 commit, still pinned
+by its full SHA. The workflow keeps Node 22, npm's lockfile cache and read-only
+repository permissions. The action itself runs on Node 24 on GitHub's hosted
+runner; this does not change the prototype's runtime. This incorporates
+Dependabot PR #1 after bringing its branch up to the current master.
+
 ## 0.1.8 - connect Plex reliably from the local connection form
 
 The owner reported submitting the server URL and token without an error while
