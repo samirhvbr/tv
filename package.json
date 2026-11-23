@@ -14,7 +14,7 @@
     "check:vendor": "node tools/vendor-hls.mjs --check"
   },
   "devDependencies": {
-    "@playwright/test": "1.65.0",
+    "@playwright/test": "1.65.1",
     "hls.js": "1.7.4"
   }
 }
